@@ -15,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event.issue.user.login == 'suryaraj09' ||
-      github.event.pull_request.user.login == 'suryaraj09'
+      github.event.issue.user.login == 'pratika719' ||
+      github.event.pull_request.user.login == 'suryaraj09' ||
+      github.event.pull_request.user.login == 'pratika719'
     steps:
       - name: Strip "Generated with Claude Code" footer
         uses: actions/github-script@v7
