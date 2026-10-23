@@ -36,7 +36,19 @@ The new folders are placeholders until their phase starts; see the roadmap.
 
 ## Local development
 
-Local Postgres via docker-compose is added in a separate Phase 0 issue; this section will be filled in there. For the legacy apps, see `app/README.md` and `backend/README.md` and copy each `.env.example` to `.env`.
+Postgres 16 runs in docker-compose:
+
+```bash
+cp .env.example .env        # then set POSTGRES_PASSWORD
+docker compose up -d
+docker compose ps           # postgres should report "healthy"
+```
+
+On first start it creates one database per service plus a test database for each: `identity`, `identity_test`, `vendor`, `vendor_test`. Connection string pattern: `postgresql://<user>:<password>@localhost:5432/<db>`.
+
+The init script runs only when the data volume is created. To recreate the databases: `docker compose down -v && docker compose up -d` (this deletes all local data).
+
+For the legacy apps, see `app/README.md` and `backend/README.md` and copy each `.env.example` to `.env`.
 
 ## Workflow
 
