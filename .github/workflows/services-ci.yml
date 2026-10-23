@@ -1,0 +1,78 @@
+name: services-ci
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/**"
+      - ".github/workflows/services-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/**"
+      - ".github/workflows/services-ci.yml"
+
+concurrency:
+  group: services-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          # A change to shared config or this workflow runs every service.
+          filters: |
+            identity-api:
+              - "services/identity-api/**"
+              - "services/ruff.toml"
+              - ".github/workflows/services-ci.yml"
+            vendor-api:
+              - "services/vendor-api/**"
+              - "services/ruff.toml"
+              - ".github/workflows/services-ci.yml"
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.services != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: shazlo
+          POSTGRES_PASSWORD: shazlo
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shazlo -d test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://shazlo:shazlo@localhost:5432/test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/${{ matrix.service }}/pyproject.toml
+      - run: pip install -e '.[dev]'
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy
+      - run: pytest

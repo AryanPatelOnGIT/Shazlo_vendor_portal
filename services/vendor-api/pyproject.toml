@@ -1,0 +1,18 @@
+[project]
+name = "vendor-api"
+version = "0.0.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["ruff", "mypy", "pytest"]
+
+[tool.ruff]
+extend = "../ruff.toml"
+
+[tool.mypy]
+strict = true
+files = ["vendor_api", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
