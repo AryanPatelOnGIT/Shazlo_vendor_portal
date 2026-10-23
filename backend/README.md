@@ -31,7 +31,7 @@ A Node.js/Express backend with MongoDB for handling pre-registration functionali
    - Update the MongoDB connection string with your credentials:
 
    ```
-   MONGODB_URI=mongodb+srv://naby:YOUR_PASSWORD@bookstore.b19fn.mongodb.net/shazlo-preregister?retryWrites=true&w=majority&appName=bookstore
+   MONGODB_URI=mongodb+srv://<user>:<password>@<cluster-host>/<database>?retryWrites=true&w=majority
    ```
 
    - Generate a strong JWT secret
