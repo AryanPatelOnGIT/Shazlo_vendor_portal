@@ -13,7 +13,14 @@ export interface VoyageFontOptions {
   display?: 'auto' | 'block' | 'swap' | 'fallback' | 'optional'
 }
 
+// baseUrl is written into url('...'), so quotes, brackets, backslashes, semicolons and
+// whitespace would break out of the string or the rule.
+const UNSAFE_URL = /['"()\\;\s]/
+
 export function voyageFontFaces({ baseUrl, display = 'swap' }: VoyageFontOptions): string {
+  if (!baseUrl.trim() || UNSAFE_URL.test(baseUrl)) {
+    throw new Error(`Invalid Voyage baseUrl ${JSON.stringify(baseUrl)}: use a plain path or URL such as '/fonts'`)
+  }
   const base = baseUrl.replace(/\/+$/, '')
   const faces: [number, string][] = [
     [400, voyageFontFiles.regular],

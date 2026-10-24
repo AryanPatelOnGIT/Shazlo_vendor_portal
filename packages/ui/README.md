@@ -34,7 +34,7 @@ Extra `Typography` variants: `display1` (Voyage 64), `display2` (Voyage 40), `st
 
 ## Fonts
 
-- **Voyage** (Violaine & Jérémy, vj-type.com) is a commercial typeface. Its web licence is not confirmed, so the files are **not** in this package. To use it, host `voyage-regular.otf` and `voyage-bold.otf` and pass their folder: `createShazloTheme({ voyage: { baseUrl: '/fonts' } })`. Without it, display text falls back to Instrument Serif, then Georgia.
+- **Voyage** (Violaine & Jérémy, vj-type.com) is a commercial typeface. Its web licence is not confirmed, so the files are **not** in this package. To use it, host `voyage-regular.otf` and `voyage-bold.otf` and pass their folder: `createShazloTheme({ voyage: { baseUrl: '/fonts' } })`. Without it, display text falls back to Instrument Serif, then Georgia. `baseUrl` must be a plain path or URL; values with quotes, brackets, backslashes, semicolons or spaces are rejected, because they would break out of the generated `url('...')`.
 - **Inter** and **JetBrains Mono** are open-source (SIL OFL). Apps load them, for example from Google Fonts or `@fontsource`.
 
 ## Demo
@@ -47,6 +47,12 @@ It shows every token and the themed MUI components. It serves the Voyage files f
 
 ![Token demo](docs/demo.png)
 
-## Scripts
+## Tests
 
-`npm run typecheck -w @shazlo/ui` and `npm test -w @shazlo/ui`; both also run from the repo root and in the apps CI workflow.
+`npm test -w @shazlo/ui` runs both suites; `npm run typecheck -w @shazlo/ui` checks types. Both also run from the repo root and in the apps CI workflow.
+
+| Suite | Where | Covers |
+|---|---|---|
+| Unit | `src/*.test.ts` (Node) | Theme values, type scale, overrides, WCAG contrast of every token, the Voyage loader and its input checks |
+| Integration | `test/*.integration.test.tsx` (jsdom) | Real MUI components rendered with the theme: button colours, heading and `<code>` mapping, CssBaseline canvas and font, Voyage `@font-face` reaching the page, and the demo page showing every token |
+| Consumer | `apps/vendor-portal/src/theme.test.ts` | An app importing `@shazlo/ui` through the workspace |
