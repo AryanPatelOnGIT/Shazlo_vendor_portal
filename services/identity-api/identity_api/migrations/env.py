@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -15,8 +16,9 @@ target_metadata = Base.metadata
 
 
 def _database_url() -> str:
-    # Tests pass the URL explicitly; otherwise use the app settings (DATABASE_URL / .env).
-    url = config.get_main_option("sqlalchemy.url")
+    # Tests pass the URL explicitly. Otherwise DATABASE_URL, so migrations need nothing else
+    # (the full app settings also require REDIS_URL); last, the app settings and `.env`.
+    url = config.get_main_option("sqlalchemy.url") or os.environ.get("DATABASE_URL")
     if not url:
         from identity_api.core.settings import get_settings
 

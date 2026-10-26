@@ -39,7 +39,7 @@ def create_sessionmaker(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]
 
 
 async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
-    """FastAPI dependency: one session per request, rolled back if the handler raises."""
+    """FastAPI dependency: one session per request. Uncommitted work is rolled back at the end."""
     sessionmaker = cast(async_sessionmaker[AsyncSession], request.app.state.sessionmaker)
     async with sessionmaker() as session:
         yield session
