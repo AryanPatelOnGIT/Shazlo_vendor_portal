@@ -1,4 +1,6 @@
 import { once } from 'node:events'
+import { spawn } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { Writable } from 'node:stream'
 import mongoose from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server-core'
@@ -44,6 +46,10 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
+  // Never use locally configured provider credentials if a test forgets its stub.
+  vi.spyOn(cloudinary.uploader, 'upload_stream').mockImplementation(() => {
+    throw new Error('Unexpected Cloudinary request in test')
+  })
   await Promise.all([Brand.deleteMany({}), Product.deleteMany({}), WaitlistUser.deleteMany({}), PreRegister.deleteMany({})])
 })
 
@@ -55,6 +61,34 @@ afterAll(async () => {
 })
 
 describe('production HTTP application', () => {
+  it('boots the actual server entry point against an owned database and serves health', async () => {
+    const child = spawn(process.execPath, ['--input-type=module', '-e', `
+      import app from './app.js';
+      const listen = app.listen;
+      app.listen = function (...args) {
+        const server = listen.apply(this, args);
+        server.once('listening', () => process.send({ port: server.address().port }));
+        return server;
+      };
+      await import('./server.js');
+    `], {
+      cwd: fileURLToPath(new URL('../', import.meta.url)),
+      env: { ...process.env, MONGODB_URI: mongo.getUri('bootstrap_tests'), PORT: '0' },
+      stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+    })
+    try {
+      const [address] = await once(child, 'message', { signal: AbortSignal.timeout(10_000) })
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/health`, { signal: AbortSignal.timeout(5000) })
+      expect(response.status).toBe(200)
+      expect(await response.json()).toMatchObject({ status: 'OK' })
+    } finally {
+      if (child.exitCode === null) {
+        child.kill()
+        await once(child, 'exit')
+      }
+    }
+  })
+
   it('serves health through the actual middleware stack', async () => {
     const response = await request('/api/health')
     expect(response.status).toBe(200)
