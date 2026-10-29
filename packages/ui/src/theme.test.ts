@@ -4,21 +4,22 @@ import { createShazloTheme, theme } from './index'
 const baselineStyles = (t: typeof theme) => t.components?.MuiCssBaseline?.styleOverrides
 
 describe('theme', () => {
-  it('uses the brand black and gold', () => {
-    expect(theme.palette.primary.main).toBe('#000000')
-    expect(theme.palette.primary.contrastText).toBe('#FFFFFF')
-    expect(theme.palette.secondary.main).toBe('#FFD700')
-    expect(theme.palette.secondary.contrastText).toBe('#000000')
+  it('uses amber/wine actions and navy/off-white secondary actions', () => {
+    expect(theme.palette.primary.main).toBe('#FAB62A')
+    expect(theme.palette.primary.contrastText).toBe('#620032')
+    expect(theme.palette.secondary.main).toBe('#103C64')
+    expect(theme.palette.secondary.contrastText).toBe('#FFFCE3')
   })
 
-  it('uses Voyage for display text and Inter for everything else', () => {
-    expect(theme.typography.display1.fontFamily).toMatch(/^"Voyage"/)
-    expect(theme.typography.display2.fontFamily).toMatch(/^"Voyage"/)
-    expect(theme.typography.fontFamily).toMatch(/^"Inter"/)
-    expect(theme.typography.h1.fontFamily).toMatch(/^"Inter"/)
+  it('uses Bodoni Moda headings, Ovo formal body and Schoolbell informal body', () => {
+    expect(theme.typography.display1.fontFamily).toMatch(/^"Bodoni Moda"/)
+    expect(theme.typography.display2.fontFamily).toMatch(/^"Bodoni Moda"/)
+    expect(theme.typography.fontFamily).toMatch(/^"Ovo"/)
+    expect(theme.typography.h1.fontFamily).toMatch(/^"Bodoni Moda"/)
+    expect(theme.typography.informal.fontFamily).toMatch(/^"Schoolbell"/)
   })
 
-  it('matches the wireframe type scale', () => {
+  it('retains the implemented sizes and non-uppercase button labels', () => {
     expect(theme.typography.h1.fontSize).toBe('1.5rem')
     expect(theme.typography.h1.fontWeight).toBe(600)
     expect(theme.typography.body1.fontSize).toBe('0.875rem')
@@ -26,9 +27,9 @@ describe('theme', () => {
   })
 
   it('uses the shared surfaces and radius', () => {
-    expect(theme.palette.background.default).toBe('#F5F5F3')
-    expect(theme.palette.background.paper).toBe('#FFFFFF')
-    expect(theme.palette.divider).toBe('#E4E4E2')
+    expect(theme.palette.background.default).toBe('#FFF8E1')
+    expect(theme.palette.background.paper).toBe('#FFFCE3')
+    expect(theme.palette.divider).toBe('#D9CAA8')
     expect(theme.shape.borderRadius).toBe(6)
   })
 
@@ -47,6 +48,6 @@ describe('theme', () => {
   it('merges overrides over the defaults', () => {
     const t = createShazloTheme({ overrides: { palette: { primary: { main: '#222222' } } } })
     expect(t.palette.primary.main).toBe('#222222')
-    expect(t.palette.secondary.main).toBe('#FFD700')
+    expect(t.palette.secondary.main).toBe('#103C64')
   })
 })

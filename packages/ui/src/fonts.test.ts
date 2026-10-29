@@ -25,7 +25,7 @@ describe('createShazloTheme', () => {
   it('returns a new theme each time and never changes the default one', () => {
     const custom = createShazloTheme({ overrides: { palette: { primary: { main: '#222222' } } } })
     expect(custom).not.toBe(theme)
-    expect(theme.palette.primary.main).toBe('#000000')
-    expect(createShazloTheme().palette.primary.main).toBe('#000000')
+    expect(theme.palette.primary.main).toBe('#FAB62A')
+    expect(createShazloTheme().palette.primary.main).toBe('#FAB62A')
   })
 })

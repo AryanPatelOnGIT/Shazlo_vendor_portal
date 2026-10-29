@@ -1,12 +1,13 @@
 # @shazlo/ui
 
-Shared MUI theme and design tokens for every Shazlo app: brand black `#000` and gold `#FFD700`, Voyage for display text, Inter for everything else. Neutrals, spacing, radii and the type scale match the vendor portal and Shazlo-One wireframes.
+Shared MUI theme and design tokens for the new Shazlo apps. The palette and font roles follow the Penpot **Design language** board inspected on 29 October 2026: amber/cream, navy, wine, Bodoni Moda headings, Ovo body and Schoolbell informal text. See the [captured source and scope](docs/penpot-design.md). Type sizes, spacing and radii are implementation choices; this package does not implement entire wireframe screens or automatically follow future Penpot edits.
 
 ## Use
 
-```ts
+```tsx
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { theme } from '@shazlo/ui'
+import '@shazlo/ui/fonts.css'
 
 <ThemeProvider theme={theme}>
   <CssBaseline />
@@ -14,45 +15,48 @@ import { theme } from '@shazlo/ui'
 </ThemeProvider>
 ```
 
-Add `"@shazlo/ui": "*"` to the app's `dependencies`; npm workspaces link it. The package ships TypeScript source, so Vite and `tsc` read it directly with no build step. Apps also need its peer dependencies: `@mui/material` 9, `@emotion/react`, `@emotion/styled` and `react` 19.
+Add `"@shazlo/ui": "*"` to the app's dependencies; npm workspaces link it. The package exports TypeScript source and font CSS, so Vite and TypeScript consume it directly. Apps need MUI 9, Emotion and React 19 peer dependencies. Import the font CSS once at the app entry point; it bundles local Fontsource assets with no third-party font requests. Include the fonts' license texts when distributing an application (the demo includes them).
 
-| Export | What it is |
+| Export | Purpose |
 |---|---|
-| `theme` | The default MUI theme |
-| `createShazloTheme({ voyage?, overrides? })` | Same theme, with Voyage `@font-face` rules and/or deep-merged overrides |
-| `tokens` (`brand`, `neutral`, `status`, `fontFamily`, `typeScale`, `space`, `radius`, `shadow`) | Raw values for anything outside MUI |
-| `voyageFontFaces({ baseUrl })` | The `@font-face` CSS for Voyage, for apps that self-host it |
-| `contrastRatio(a, b)` | WCAG contrast ratio, used by the tests |
+| `theme` | Default light MUI theme |
+| `createShazloTheme({ overrides?, voyage? })` | Deep-merged overrides; legacy opt-in Voyage loader |
+| `tokens` | All raw token groups, also exported individually |
+| `brand`, `neutral`, `annotation`, `link` | Source palette, supporting neutrals, annotation-only raspberry and darker link text |
+| `status`, `statusBackground`, `reviewStatus` | Paired status foregrounds/backgrounds and product review states |
+| `fontFamily`, `typeScale`, `space`, `radius`, `shadow` | Typography and retained geometry choices |
+| `contrastRatio(a, b)` | WCAG contrast for `#RRGGBB` pairs |
+| `voyageFontFaces({ baseUrl })`, `voyageFontFiles` | Legacy compatibility utilities; appropriate commercial licensing required |
 
-Extra `Typography` variants: `display1` (Voyage 64), `display2` (Voyage 40), `stat` (28) and `mono` (JetBrains Mono 12).
+Extra `Typography` variants: `display1` (64), `display2` (40), `stat` (28), `informal` (16) and `mono` (12). Bodoni Moda is used for headings/display/stat; Ovo for formal body; Schoolbell for informal body; monospace uses the system stack. Ovo/Schoolbell use regular weight. `theme.spacing()` retains MUI's 8 px unit; `space` exposes the 4 px grid. Dark mode is outside this scope.
 
-## Colour rules
+## Color and status rules
 
-- Gold is an accent and a button fill. Text on gold is always black (15:1); white on gold fails contrast.
-- Status colours (`success`, `warning`, `error`, `info`) all pass WCAG AA as text on white. Status is never shown by colour alone; pair it with an icon or label.
-- The tests check these ratios, so a token change that breaks contrast fails CI.
+- Primary actions: amber `#FAB62A` with wine `#620032` text. Secondary actions: navy `#103C64` with off-white `#FFFCE3`. Text/outlined primary actions use wine, not amber text.
+- Use `link.text` (`#2E6A93`) for links. Raw blue `#4281AA` is for fills/icons and fails normal-text AA on off-white.
+- Pair every status with a label/icon. `reviewStatus` gives live blue, pending cream/brown, sent-back orange/brown and suspended wine. Raspberry is only for design annotations.
+- Use `reviewStatus[state].foreground` as text and `.background` as fill. Normal semantic MUI chips map `success`/`info` to blue, `warning` to pending cream, `error` to wine. Sent-back has its separate orange pair.
+- Tests check the actual paired text/fill contrast, rendered action/link/control styles and the independently captured design contract.
+
+This private package replaces the old `brand.black/gold/white` keys. Its first-party consumer tests and demo are updated together. The separate legacy website is not migrated by this theme PR.
 
 ## Fonts
 
-- **Voyage** (Violaine & Jérémy, vj-type.com) is a commercial typeface. Its web licence is not confirmed, so the files are **not** in this package. To use it, host `voyage-regular.otf` and `voyage-bold.otf` and pass their folder: `createShazloTheme({ voyage: { baseUrl: '/fonts' } })`. Without it, display text falls back to Instrument Serif, then Georgia. `baseUrl` must be a plain path or URL; values with quotes, brackets, backslashes, semicolons or spaces are rejected, because they would break out of the generated `url('...')`.
-- **Inter** and **JetBrains Mono** are open-source (SIL OFL). Apps load them, for example from Google Fonts or `@fontsource`.
+Bodoni Moda and Ovo are OFL-1.1; Schoolbell is Apache-2.0. Their local Fontsource dependencies and license files are included with the demo. See [Fontsource installation documentation](https://fontsource.org/docs/getting-started/install) and the [source baseline](docs/penpot-design.md).
 
-## Demo
+Voyage is no longer a default family or demo asset. Its commercial web license is unconfirmed. The compatibility loader can still declare licensed self-hosted files with `createShazloTheme({ voyage: { baseUrl: '/fonts' } })`, but selecting that family requires an explicit typography override. Unsafe CSS URL characters remain rejected. No commercial font files are shipped in this package.
 
-```bash
-npm run demo -w @shazlo/ui
+## Demo and checks
+
+```sh
+npm run demo --workspace @shazlo/ui
+npm run build:demo --workspace @shazlo/ui
+npm test -- --project ui --project vendor-portal
+npm run typecheck
 ```
 
-It shows every token and the themed MUI components. It serves the Voyage files from the legacy site's `app/public` folder, where they are hosted today.
+The production demo build runs in apps CI on every PR and pushes to main, alongside the existing repository tests and legacy app build. The demo serves only its own assets and font licenses. It shows the palette, typography, controls, labeled review states and a navy shell specimen.
 
-![Token demo](docs/demo.png)
+The previous black/gold screenshot has been removed because it no longer represents this theme.
 
-## Tests
-
-`npm test -w @shazlo/ui` runs both suites; `npm run typecheck -w @shazlo/ui` checks types. Both also run from the repo root and in the apps CI workflow.
-
-| Suite | Where | Covers |
-|---|---|---|
-| Unit | `src/*.test.ts` (Node) | Theme values, type scale, overrides, WCAG contrast of every token, the Voyage loader and its input checks |
-| Integration | `test/*.integration.test.tsx` (jsdom) | Real MUI components rendered with the theme: button colours, heading and `<code>` mapping, CssBaseline canvas and font, Voyage `@font-face` reaching the page, and the demo page showing every token |
-| Consumer | `apps/vendor-portal/src/theme.test.ts` | An app importing `@shazlo/ui` through the workspace |
+Unit tests cover the external design snapshot, contrast arithmetic, theme overrides and legacy font-URL safety. Real MUI/jsdom tests cover emitted styles, semantic typography and demo content. Vendor-portal tests verify workspace consumption. The production build checks emitted font families/weights, local asset paths and included license texts. Browser verification of actual font loading/layout remains separate; these tests do not prove complete screen parity or application journeys.

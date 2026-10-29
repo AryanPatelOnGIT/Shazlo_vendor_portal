@@ -6,12 +6,13 @@ import {
   CardContent,
   Chip,
   Divider,
+  Link,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import { useId, type ReactNode } from 'react'
-import { brand, contrastRatio, neutral, radius, space, status, typeScale } from '../src'
+import { annotation, brand, contrastRatio, link, neutral, radius, reviewStatus, space, status, typeScale } from '../src'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   const id = useId()
@@ -26,8 +27,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Swatch({ name, hex }: { name: string; hex: string }) {
-  const onBlack = contrastRatio(hex, brand.black)
-  const onWhite = contrastRatio(hex, brand.white)
+  const onBlack = contrastRatio(hex, '#000000')
+  const onWhite = contrastRatio(hex, '#FFFFFF')
   const text = onBlack >= onWhite ? 'black' : 'white'
   return (
     <Card>
@@ -66,6 +67,7 @@ const variants = [
   ['caption', 'caption'],
   ['overline', 'overline'],
   ['stat', 'stat'],
+  ['informal', 'informal'],
   ['mono', 'mono'],
 ] as const
 
@@ -75,14 +77,13 @@ export function App() {
       <Typography variant="overline" color="text.secondary">
         @shazlo/ui · tokens and theme
       </Typography>
-      <Typography variant="display1">Shazlo</Typography>
+      <Typography variant="display1">Swipe to style</Typography>
       <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 640, mt: 1 }}>
-        Black and gold from the brand, neutrals and type scale from the wireframe kit. Import the theme with{' '}
-        <Typography variant="mono" component="code">
-          {"import { theme } from '@shazlo/ui'"}
-        </Typography>
-        .
+        Shazlo’s warm palette and expressive type, aligned with the Penpot Design language board inspected on 29 October 2026.
       </Typography>
+      <Link href="https://design.penpot.app/?screen=workspace&team-id=685eebd9-2ce2-80a4-8008-d702ad7258d4&file-id=685eebd9-2ce2-80a4-8008-d702c75c4edc&page-id=685eebd9-2ce2-80a4-8008-d702c75c4edd" sx={{ display: 'inline-block', mt: 2 }}>
+        View the design source
+      </Link>
 
       <Section title="Brand">
         <Swatches colors={brand} />
@@ -94,6 +95,12 @@ export function App() {
       <Divider />
       <Section title="Status">
         <Swatches colors={status} />
+      </Section>
+      <Section title="Links and annotations">
+        <Swatches colors={{ linkText: link.text, ...annotation }} />
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          Raspberry is reserved for design annotations. Blue links use the darker accessible text shade.
+        </Typography>
       </Section>
       <Divider />
 
@@ -107,7 +114,7 @@ export function App() {
                   {variant} · {t.size}/{t.lineHeight} · {t.weight}
                 </Typography>
                 <Typography variant={variant}>
-                  {variant === 'stat' ? '18 live' : 'Hand block-printed, naturally dyed.'}
+                  {variant === 'stat' ? '18 live' : variant === 'informal' ? 'A little joy in every find.' : 'Hand block-printed, naturally dyed.'}
                 </Typography>
               </Box>
             )
@@ -151,10 +158,18 @@ export function App() {
             <Button>Discard draft</Button>
           </Stack>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-            <Chip label="Live" color="success" variant="outlined" />
-            <Chip label="Pending review" />
-            <Chip label="Sent back" color="error" variant="outlined" />
-            <Chip label="Publishing" color="info" variant="outlined" />
+            {([
+              ['live', '✓', 'Live'],
+              ['pending', '◷', 'Pending review'],
+              ['sentBack', '↩', 'Sent back'],
+              ['suspended', '⊘', 'Suspended'],
+            ] as const).map(([state, icon, label]) => (
+              <Chip key={state} label={label} icon={<span aria-hidden="true">{icon}</span>} sx={{
+                color: reviewStatus[state].foreground,
+                bgcolor: reviewStatus[state].background,
+                '& .MuiChip-icon': { color: 'inherit', ml: 1 },
+              }} />
+            ))}
           </Stack>
           <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { md: '1fr 1fr' } }}>
             <TextField label="Brand name" defaultValue="Kalki Studio" helperText="Contact us to change your brand name." />
@@ -175,6 +190,13 @@ export function App() {
             </CardContent>
           </Card>
         </Stack>
+      </Section>
+      <Section title="Shazlo-One shell">
+        <Box sx={{ bgcolor: brand.navy, color: brand.offWhite, p: 3, borderRadius: 2 }}>
+          <Typography variant="h1" component="h2" color="inherit">Shazlo-One</Typography>
+          <Typography color="inherit" sx={{ mt: 1, mb: 2 }}>Review the next collection.</Typography>
+          <Button variant="contained">Review products</Button>
+        </Box>
       </Section>
     </Box>
   )
