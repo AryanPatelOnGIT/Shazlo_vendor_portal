@@ -323,3 +323,36 @@ persisted checkout credentials and security-events write permission restricted
 to the analysis job. No repository protections or required reviews are changed.
 CodeQL results must be read from the PR before describing it as merge-ready;
 adding a workflow alone does not establish a successful analysis or no alerts.
+
+## Font URL security follow-up (30 October 2026)
+
+After #63 was merged, #44's CodeQL gate detected
+[`js/polynomial-redos`, alert 1](https://github.com/shazlo/Shazlo_vendor_portal/security/code-scanning/1)
+at `packages/ui/src/fonts.ts:24`. The application tests and builds passed; this
+was a real security finding, not a failed unit test. The earlier #63 analysis
+used its PR diff (27 files); #44's diff against main covered 64 files, including
+the font loader. A passing stacked-PR scan does not establish that its parent
+PR's wider security scan is clear.
+
+The trailing-slash regular expression retried from every slash when a long run
+ended with a non-slash character. A bounded local reproduction of the actual
+exported function took 23.91/62.95/425.69 ms for 4k/8k/16k slash-heavy inputs.
+The replacement scans the suffix once with an index and slices once, avoiding
+backtracking and repeated substring copies. URL validation and generated CSS
+remain unchanged. This is a public library-input risk; exposure to external
+requests depends on the consuming application.
+
+Seven additional cases protect root paths, CDN paths, internal slashes, a 100k
+trailing slash run and a 100k near-match slash run. Expected CSS URLs are asserted
+directly; no machine-speed threshold or timeout relaxation is introduced. The
+existing CodeQL gate checks the computational-safety issue. The new function
+handled the same 16k input in 0.06 ms and 100k in 0.42 ms locally; these are
+illustrative observations, not portable timing guarantees. See the
+[official query explanation](https://codeql.github.com/codeql-query-help/javascript/js-polynomial-redos/).
+
+Local affected verification passes: **72 UI/consumer tests**, lint, workspace
+types, demo production build and artifact verification. The selected repository
+suite now has **315 JavaScript tests in 20 files**, plus the two existing Python
+cases. Full CI/security evidence must be tied to the new revision; the open
+alert on #44 cannot be considered resolved until the fix lands there and its
+own security check passes. No scan is suppressed and no protection is weakened.
