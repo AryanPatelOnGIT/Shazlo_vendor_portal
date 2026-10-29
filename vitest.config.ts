@@ -19,7 +19,7 @@ export default defineConfig({
         },
         test: {
           name: 'legacy-app',
-          root: 'app',
+          root: fileURLToPath(new URL('./app', import.meta.url)),
           include: ['test/**/*.test.{js,jsx}'],
           environment: 'jsdom',
           setupFiles: ['./test/setup.js'],
@@ -31,7 +31,7 @@ export default defineConfig({
       {
         test: {
           name: 'legacy-backend',
-          root: 'backend',
+          root: fileURLToPath(new URL('./backend', import.meta.url)),
           include: ['test/**/*.test.js'],
           environment: 'node',
           // A cold Windows MongoDB archive is large; database operations retain a 15s timeout.
@@ -43,6 +43,7 @@ export default defineConfig({
       {
         test: {
           name: 'contracts',
+          root: fileURLToPath(new URL('.', import.meta.url)),
           include: ['test/contracts/**/*.test.js'],
           environment: 'node',
         },

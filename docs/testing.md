@@ -114,18 +114,18 @@ delivery nor provider credentials are validated. The first run needs network
 access to download MongoDB; subsequent runs use the binary cache. A download or
 boot failure fails the suite instead of silently skipping integration tests.
 
-Test-only tooling reuses Vitest 3 and Testing Library already present in the UI
+Test-only tooling uses Vitest 4.1.12 and Testing Library already present in the UI
 workspace. The coverage provider is pinned to the installed Vitest version.
 Legacy app tests declare Testing Library locally so its native React DOM imports
 use the same React 19.1 as the app. `mongodb-memory-server-core` 10.4.3 (MIT,
 Node >=16.20.1) supplies a real local database without an install hook; MongoDB is
-pinned to 7.0.24. Ajv 8.17.1 and ajv-formats 3.0.1 (MIT) validate the repository's
+pinned to 7.0.24. Ajv 8.20.0 and ajv-formats 3.0.1 (MIT) validate the repository's
 2020-12 schemas and formats. Upstream repositories/tags, engine requirements and
 licenses were checked. References: [MongoDB server harness](https://github.com/typegoose/mongodb-memory-server/tree/v10.4.3),
 [harness setup](https://typegoose.github.io/mongodb-memory-server/docs/guides/quick-start-guide/),
-[Ajv](https://github.com/ajv-validator/ajv/tree/v8.17.1),
+[Ajv](https://github.com/ajv-validator/ajv/tree/v8.20.0),
 [2020-12 support](https://ajv.js.org/json-schema.html#draft-2020-12-breaking),
-[Vitest](https://github.com/vitest-dev/vitest/tree/v3.2.7).
+[Vitest](https://github.com/vitest-dev/vitest/tree/v4.1.12).
 
 Coverage includes **unimported runtime source**, including legacy screens and
 server startup, so a low aggregate number remains visible. No arbitrary coverage
@@ -200,7 +200,7 @@ showing confirmation, expose a retryable error and retain the user's input.
 The waitlist completes when the response arrives instead of using a detached
 1.5-second success timer that could report success after failure or unmount.
 
-## Verification on the final implementation
+## Initial verification (before follow-up security review)
 
 Local environment: Windows, Node 24.19.0, npm 12.0.2, Vitest 3.2.7, MongoDB
 7.0.24. Python checks used an isolated Python 3.13.15 environment; CI retains
@@ -232,3 +232,49 @@ build step, keeps the original DOM test timeout and assertions, and gives cold
 database setup a bounded ten-minute allowance. There are no configured test
 retries or expected-failure/skip markers. Product regressions above were observed
 failing before their corresponding fixes.
+
+## Follow-up safety review
+
+The second review found and corrected a working-directory bug: inline Vitest
+project roots were relative to the caller's directory. A root invocation worked,
+but invocation from `app/` or `backend/` could discover no tests. Roots are now
+absolute, and subprocess regressions verify discovery from both directories.
+A separate smoke test boots the actual `backend/server.js` entry point using an
+owned MongoDB database and ephemeral port, checks health, and terminates the child.
+Cloudinary now has a fail-closed default stub in every integration test; forgetting
+a provider stub cannot use developer credentials.
+
+The dependency review upgraded Ajv to 8.20.0 and the existing Vitest runner plus
+matching coverage provider to 4.1.12. The latter remains compatible with CI's Node
+20 target and removes the vulnerable Tinypool dependency. This is a security
+upgrade, not an application dependency migration. See the
+[Ajv advisory](https://github.com/advisories/GHSA-2g4f-4pwh-qvx6),
+[Vitest advisory](https://github.com/advisories/GHSA-qxg6-89mg-rqv8), and
+[Tinypool advisory](https://github.com/advisories/GHSA-5gmw-xhrv-c9v3).
+The new root `npm audit --audit-level=moderate` CI step covers test/workspace
+dependencies. Checkout credentials are not persisted in either test workflow.
+
+Audit snapshot on 29 October 2026: the updated root lockfile has **zero reported
+vulnerabilities**. The unchanged legacy app lockfile reports 26 vulnerable package
+entries (18 high, 6 moderate, 2 low); the backend reports 14 (1 critical, 11 high,
+2 moderate). Each flagged installed version was compared with the starting UI
+branch's lockfiles and is unchanged by this PR. Examples include SheetJS, Axios,
+Express middleware and Multer. Counts are package entries, not independent
+exploits, and do not establish exploitability in every execution mode.
+
+These production dependencies and the public legacy admin endpoints prevent a
+claim that the whole application is production-safe. Replacing the spreadsheet
+parser and implementing authentication/authorization require application changes
+and acceptance coverage beyond this test PR. Live providers and a complete browser
+journey remain unverified as described in the decision table. No live accounts,
+notification service, configured developer database or production data were used.
+
+Follow-up local verification: **299 tests in 19 files pass** with Vitest 4.1.12,
+including the three new entrypoint/boot regressions; no skips, retries or failures.
+Both Python service suites, lint, types and workflow YAML validation pass again.
+Vitest 4's AST-based coverage reports 26.60% lines / 18.63% branches across all
+included runtime sources. Its executable-statement mapping differs from Vitest 3;
+these numbers must not be compared directly with the initial report above.
+Unimported application, startup and catalog files were explicitly checked to remain
+in the report. The root audit reports zero vulnerabilities; the legacy audit
+findings above remain unresolved and are not concealed by the root CI audit gate.
