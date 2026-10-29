@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { brand, contrastRatio, neutral, status, voyageFontFaces } from './index'
+import { brand, contrastRatio, link, neutral, reviewStatus, status, statusBackground, theme, voyageFontFaces } from './index'
 
 describe('contrastRatio', () => {
   it('matches the WCAG reference values', () => {
@@ -20,13 +20,29 @@ describe('tokens meet WCAG AA', () => {
     }
   })
 
-  it('black on gold, never white on gold', () => {
-    expect(contrastRatio(brand.black, brand.gold)).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio(brand.white, brand.gold)).toBeLessThan(3)
+  it('wine on amber and off-white on navy, including contained button hover', () => {
+    expect(contrastRatio(brand.wine, brand.amber)).toBeGreaterThanOrEqual(4.5)
+    expect(contrastRatio(brand.wine, theme.palette.primary.dark)).toBeGreaterThanOrEqual(4.5)
+    expect(contrastRatio(brand.offWhite, brand.navy)).toBeGreaterThanOrEqual(4.5)
+    expect(contrastRatio(brand.offWhite, theme.palette.secondary.dark)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it('status colours as text on white', () => {
-    for (const c of Object.values(status)) expect(contrastRatio(c, neutral.surface)).toBeGreaterThanOrEqual(4.5)
+  it('status text on surfaces and its corresponding fill', () => {
+    for (const key of Object.keys(status) as (keyof typeof status)[]) {
+      expect(contrastRatio(status[key], neutral.surface)).toBeGreaterThanOrEqual(4.5)
+      expect(contrastRatio(status[key], statusBackground[key])).toBeGreaterThanOrEqual(4.5)
+    }
+    for (const state of Object.values(reviewStatus)) {
+      expect(contrastRatio(state.foreground, state.background)).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  it('uses the darker blue for links; the raw brand blue is not AA text', () => {
+    for (const surface of [brand.offWhite, brand.cream, brand.canvas]) {
+      expect(contrastRatio(link.text, surface)).toBeGreaterThanOrEqual(4.5)
+      expect(contrastRatio(brand.wine, surface)).toBeGreaterThanOrEqual(4.5)
+    }
+    expect(contrastRatio(brand.blue, brand.offWhite)).toBeLessThan(4.5)
   })
 })
 

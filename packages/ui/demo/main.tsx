@@ -1,10 +1,8 @@
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { createRoot } from 'react-dom/client'
-import { createShazloTheme } from '../src'
+import { theme } from '../src'
+import '../src/fonts.css'
 import { App } from './App'
-
-// The demo serves the legacy site's public folder, which holds the Voyage files.
-const theme = createShazloTheme({ voyage: { baseUrl: '/' } })
 
 const root = document.getElementById('root')
 if (root) {

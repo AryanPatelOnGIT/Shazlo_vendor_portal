@@ -278,3 +278,48 @@ these numbers must not be compared directly with the initial report above.
 Unimported application, startup and catalog files were explicitly checked to remain
 in the report. The root audit reports zero vulnerabilities; the legacy audit
 findings above remain unresolved and are not concealed by the root CI audit gate.
+
+
+## Penpot design alignment follow-up
+
+The shared theme's original black/gold and Voyage/Inter defaults did not match
+Penpot's Design language board when inspected on 29 October 2026. The captured
+[source identity, palette, font roles and limits](../packages/ui/docs/penpot-design.md)
+now distinguish external design facts from supporting tints and retained numeric
+sizes. UI and consumer tests exercise the updated theme; the separate legacy
+website theme and scaffold application scope are unchanged.
+
+The final focused run passes **65 tests in nine files** (61 UI and four consumer tests).
+Nine additional assertions bring the repository's selected JavaScript total to
+308 in 20 files. Lint, workspace types, both Python services' ruff lint/format,
+strict mypy and two existing pytest cases pass locally. The root dependency audit
+still reports zero vulnerabilities. The production demo build passes with the
+three local Fontsource families and their licenses; a build-artifact check also
+verifies emitted family names, weights, local font asset paths and license files.
+This check catches a stylesheet that imports successfully but declares a different
+font-family name than the theme requests.
+
+An attempted full local coverage run passed 305/307 tests and encountered two
+five-second timeouts in unchanged legacy pre-registration component tests during
+machine contention (712 seconds overall). A focused rerun passes all seven legacy
+pre-registration tests. A subsequent UI attempt also timed out in two repeated
+demo renders and exposed an error-field outline override; the override is fixed
+and covered by a new assertion. The read-only demo fixture now renders once per
+file, retaining all assertions. The final 65-test focused run passes without skips.
+These attempts are not reported as a full-suite pass; final PR CI must verify the
+combined revision on Ubuntu/Node 20. No timeouts were increased and no test retries
+or skips added. The legacy production build passes with its existing warnings.
+
+The obsolete screenshot was removed. Chrome extension DOM inspection confirms
+the rendered Ovo body, Bodoni Moda heading, canvas background and no horizontal
+overflow at the current viewport. Screenshot and font-resource inspection have
+intermittently failed, so actual font loading, wider responsive coverage and visual
+acceptance are not claimed. Native desktop control is no longer used; subsequent
+browser checks use only the Chrome extension, as requested by the user.
+
+The new CodeQL workflow scans JavaScript/TypeScript and Python on every PR (any
+base), main pushes and manual dispatch, with pinned actions, bounded jobs, no
+persisted checkout credentials and security-events write permission restricted
+to the analysis job. No repository protections or required reviews are changed.
+CodeQL results must be read from the PR before describing it as merge-ready;
+adding a workflow alone does not establish a successful analysis or no alerts.
