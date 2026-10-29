@@ -21,7 +21,11 @@ export function voyageFontFaces({ baseUrl, display = 'swap' }: VoyageFontOptions
   if (!baseUrl.trim() || UNSAFE_URL.test(baseUrl)) {
     throw new Error(`Invalid Voyage baseUrl ${JSON.stringify(baseUrl)}: use a plain path or URL such as '/fonts'`)
   }
-  const base = baseUrl.replace(/\/+$/, '')
+  // Scan from the end once. An unanchored /\/+$/ retries at every slash when
+  // a long slash run is followed by another character, causing quadratic work.
+  let end = baseUrl.length
+  while (end > 0 && baseUrl.charAt(end - 1) === '/') end -= 1
+  const base = baseUrl.slice(0, end)
   const faces: [number, string][] = [
     [400, voyageFontFiles.regular],
     [700, voyageFontFiles.bold],
